@@ -31,10 +31,8 @@ EMAIL_SENDER = config.get('email_sender', '')
 EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD') # Get password from environment
 EMAIL_RECEIVER = config.get('email_receiver', '')
 
-# --- STEP 2: Check the debug output from these print statements ---
-# You can remove these debug lines once everything is working
+# You can remove this debug line once everything is working
 print(f"DEBUG: Was the .env file loaded successfully? -> {dotenv_loaded}")
-print(f"DEBUG: The password read from environment is: -> '{EMAIL_PASSWORD}'")
 
 
 if not all([PRODUCT_URL, EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_RECEIVER]):
