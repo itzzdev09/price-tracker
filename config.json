@@ -1,0 +1,8 @@
+{
+  "product_url": "https://www.amazon.in/dp/B0BY8JZ22K",
+  "price_threshold": 60000.0,
+  "smtp_server": "smtp.gmail.com",
+  "smtp_port": 587,
+  "email_sender": "your_email@gmail.com",
+  "email_receiver": "receiver_email@example.com"
+}
