@@ -1,8 +1,8 @@
 {
-  "product_url": "https://www.amazon.in/dp/B0BY8JZ22K",
+  "product_url": "https://www.amazon.in/dp/B0BY8JZ22K?th=1",
   "price_threshold": 60000.0,
   "smtp_server": "smtp.gmail.com",
   "smtp_port": 587,
-  "email_sender": "your_email@gmail.com",
-  "email_receiver": "receiver_email@example.com"
+  "email_sender": "devrajpal301@gmail.com",
+  "email_receiver": "connectingwithdev@gmail.com"
 }
