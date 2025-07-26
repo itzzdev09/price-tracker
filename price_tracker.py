@@ -4,6 +4,7 @@ import smtplib
 import json
 import time
 import os
+import re
 from dotenv import load_dotenv
 
 # --- STEP 1: Load .env file and get a confirmation ---
@@ -31,6 +32,7 @@ EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD') # Get password from environmen
 EMAIL_RECEIVER = config.get('email_receiver', '')
 
 # --- STEP 2: Check the debug output from these print statements ---
+# You can remove these debug lines once everything is working
 print(f"DEBUG: Was the .env file loaded successfully? -> {dotenv_loaded}")
 print(f"DEBUG: The password read from environment is: -> '{EMAIL_PASSWORD}'")
 
@@ -47,8 +49,15 @@ def get_product_info(url):
     Scrapes the product title and price from the given URL.
     """
     try:
+        # Using more comprehensive headers to better mimic a real browser request
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'Accept-Language': 'en-US,en;q=0.9,en-IN;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1', # Do Not Track Request Header
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
         }
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -56,17 +65,32 @@ def get_product_info(url):
         soup = BeautifulSoup(response.content, 'html.parser')
 
         title_element = soup.find("span", {"id": "productTitle"})
-        # Amazon price can be in different spans, this is a more robust selector
-        price_element = soup.find("span", {"class": "a-price-whole"})
+        
+        # More robust price finding logic
+        price_element = soup.select_one(".a-price-whole")
+        if not price_element:
+            # Fallback for pages where the main price is hidden for screen readers
+            price_element = soup.select_one(".a-offscreen")
 
         if not title_element or not price_element:
-            print("Warning: Could not find title or price elements. The website structure may have changed.")
+            print("Warning: Could not find title or price elements. Amazon's page structure may have changed or you may be blocked.")
+            # For deep debugging, you can save the HTML content to see what the script sees
+            # with open("amazon_page.html", "w", encoding="utf-8") as f:
+            #     f.write(soup.prettify())
             return None, None
 
         title = title_element.get_text().strip()
-        # Corrected price cleaning for Indian currency format (e.g., "35,999")
-        price_str = price_element.get_text().strip().replace(',', '')
-        price = float(price_str)
+        
+        # Clean the price string to handle formats like "₹35,999.00"
+        price_str = price_element.get_text().strip()
+        price_match = re.search(r'[\d,]+(?:\.\d+)?', price_str)
+        
+        if price_match:
+            cleaned_price_str = price_match.group(0).replace(',', '')
+            price = float(cleaned_price_str)
+        else:
+            print(f"Warning: Could not parse a valid price from the string: '{price_str}'")
+            return title, None
 
         return title, price
 
@@ -97,8 +121,9 @@ def send_email_alert(subject, body):
             server.starttls()
             server.login(EMAIL_SENDER, EMAIL_PASSWORD)
             
-            message = f"Subject: {subject}\n\n{body.encode('utf-8')}"
-            server.sendmail(EMAIL_SENDER, EMAIL_RECEIVER, message)
+            # Ensure the message is properly formatted and encoded
+            message = f"Subject: {subject}\n\n{body}"
+            server.sendmail(EMAIL_SENDER, EMAIL_RECEIVER, message.encode('utf-8'))
         print("Email alert sent successfully!")
     except smtplib.SMTPAuthenticationError:
         print("Error: SMTP authentication failed. Check your email and App Password.")
