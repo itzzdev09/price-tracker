@@ -24,6 +24,9 @@ SMTP_PORT = config.get('smtp_port', 587)
 EMAIL_SENDER = config.get('email_sender', '')
 EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '') # For security, get from environment variable
 EMAIL_RECEIVER = config.get('email_receiver', '')
+# --- Add this line for debugging ---
+print(f"DEBUG: The password read from environment is: '{EMAIL_PASSWORD}'")
+# ------------------------------------
 
 if not all([PRODUCT_URL, EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_RECEIVER]):
     print("Error: Please complete the configuration in config.json and set the EMAIL_PASSWORD environment variable.")
