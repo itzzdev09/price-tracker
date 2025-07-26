@@ -158,3 +158,4 @@ if __name__ == "__main__":
         track_price()
         print("\nNext check in 24 hours...")
         time.sleep(24 * 60 * 60)
+#smtp is failing
