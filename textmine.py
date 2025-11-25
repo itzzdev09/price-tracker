@@ -4,44 +4,39 @@ import re
 from collections import Counter
 import nltk
 
-# Download NLTK stopwords (only first time)
+# Download stopwords (first-time only)
 nltk.download('stopwords')
 from nltk.corpus import stopwords
 
 # -------------------------------------------
-# 1. WEB MINING → SCRAPE NEWS HEADLINES
+# 1. WEB MINING → SCRAPE QUOTES
 # -------------------------------------------
-URL = "https://www.hindustantimes.com/latest-news"
+URL = "https://quotes.toscrape.com/"
 response = requests.get(URL)
 soup = BeautifulSoup(response.text, "html.parser")
 
-# Collect all headlines
-headlines = [h.text.strip() for h in soup.find_all("h3")]
+quotes = [q.text.strip() for q in soup.find_all("span", class_="text")]
 
-print("=== SCRAPED HEADLINES ===")
-for h in headlines:
-    print("-", h)
+print("=== SCRAPED QUOTES ===")
+for q in quotes:
+    print("-", q)
 
 # -------------------------------------------
-# 2. TEXT MINING → CLEANING & TOKENIZATION
+# 2. TEXT MINING → CLEANING
 # -------------------------------------------
-text = " ".join(headlines)  # combine all headlines
-
-# Clean text
-text = re.sub(r"[^A-Za-z ]", " ", text).lower()
+text = " ".join(quotes).lower()
+text = re.sub(r"[^a-z ]", " ", text)
 words = text.split()
 
-# Remove stopwords
 stop_words = set(stopwords.words("english"))
-filtered_words = [w for w in words if w not in stop_words and len(w) > 2]
+filtered = [w for w in words if w not in stop_words and len(w) > 2]
 
 # -------------------------------------------
-# 3. TEXT ANALYTICS → WORD FREQUENCY
+# 3. TEXT MINING → FIND KEYWORDS
 # -------------------------------------------
-freq = Counter(filtered_words)
+freq = Counter(filtered)
 top_words = freq.most_common(10)
 
-print("\n=== TOP KEYWORDS (TEXT MINING) ===")
+print("\n=== TOP KEYWORDS ===")
 for word, count in top_words:
     print(f"{word}: {count}")
-
