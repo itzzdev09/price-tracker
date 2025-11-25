@@ -87,9 +87,6 @@ def get_product_info(url):
         return None, None
 
 def save_data(data, filename="products.json"):
-    """
-    Saves scraped data to a JSON file.
-    """
     try:
         with open(filename, 'w') as f:
             json.dump(data, f, indent=4)
