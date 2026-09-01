@@ -50,7 +50,7 @@ def get_product_info(url):
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
         }
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=30)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.content, 'html.parser')
