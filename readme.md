@@ -21,17 +21,18 @@ Prerequisites
 
     beautifulsoup4 library
 
+    python-dotenv library (for loading EMAIL_PASSWORD from a .env file)
+
 You can install the required libraries using pip:
 
-    sh``` 
-    pip install requests beautifulsoup4
+    pip install -r requirements.txt
 
 Setup & Configuration
 
     Clone the Repository:
 
     git clone https://github.com/itzzdev09/price-tracker
-    cd price-trakcer
+    cd price-tracker
 
     Configure config.json:
 
