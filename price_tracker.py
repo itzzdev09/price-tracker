@@ -5,6 +5,7 @@ import json
 import time
 import os
 import re
+from email.message import EmailMessage
 from dotenv import load_dotenv
 
 
@@ -99,12 +100,16 @@ def send_email_alert(subject, body):
     Sends an email alert.
     """
     try:
+        message = EmailMessage()
+        message["Subject"] = subject
+        message["From"] = EMAIL_SENDER
+        message["To"] = EMAIL_RECEIVER
+        message.set_content(body)
+
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
             server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-            
-            message = f"Subject: {subject}\n\n{body}"
-            server.sendmail(EMAIL_SENDER, EMAIL_RECEIVER, message.encode('utf-8'))
+            server.send_message(message)
         print("Email alert sent successfully!")
     except smtplib.SMTPAuthenticationError:
         print("Error: SMTP authentication failed. Check your email and App Password.")
@@ -141,4 +146,3 @@ if __name__ == "__main__":
         track_price()
         print("\nNext check in 24 hours...")
         time.sleep(24 * 60 * 60)
-#smtp is failing
