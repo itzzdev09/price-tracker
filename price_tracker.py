@@ -57,18 +57,26 @@ def get_product_info(url):
         soup = BeautifulSoup(response.content, 'html.parser')
 
         title_element = soup.find("span", {"id": "productTitle"})
-        
-        price_element = soup.select_one(".a-price-whole")
-        if not price_element:
+
+        # .a-price-whole holds only the integer rupees; the paise live in a
+        # separate .a-price-fraction span. Combine them so prices like
+        # "1,299.50" aren't silently truncated to 1299. .a-offscreen already
+        # carries the full amount, so it's used as-is.
+        whole_element = soup.select_one(".a-price-whole")
+        if whole_element:
+            fraction_element = soup.select_one(".a-price-fraction")
+            fraction = fraction_element.get_text().strip() if fraction_element else ""
+            price_str = whole_element.get_text().strip().rstrip(".,") + (f".{fraction}" if fraction else "")
+            price_element = whole_element
+        else:
             price_element = soup.select_one(".a-offscreen")
+            price_str = price_element.get_text().strip() if price_element else ""
 
         if not title_element or not price_element:
             print("Warning: Could not find title or price elements. Amazon's page structure may have changed or you may be blocked.")
             return None, None
 
         title = title_element.get_text().strip()
-        
-        price_str = price_element.get_text().strip()
         price_match = re.search(r'[\d,]+(?:\.\d+)?', price_str)
         
         if price_match:
