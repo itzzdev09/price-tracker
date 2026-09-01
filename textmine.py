@@ -3,16 +3,20 @@ from bs4 import BeautifulSoup
 import re
 from collections import Counter
 import nltk
-
-# Download stopwords (first-time only)
-nltk.download('stopwords')
 from nltk.corpus import stopwords
+
+# Download stopwords only when they aren't already present
+try:
+    stopwords.words("english")
+except LookupError:
+    nltk.download("stopwords")
 
 # -------------------------------------------
 # 1. WEB MINING → SCRAPE QUOTES
 # -------------------------------------------
 URL = "https://quotes.toscrape.com/"
-response = requests.get(URL)
+response = requests.get(URL, timeout=30)
+response.raise_for_status()
 soup = BeautifulSoup(response.text, "html.parser")
 
 quotes = [q.text.strip() for q in soup.find_all("span", class_="text")]
