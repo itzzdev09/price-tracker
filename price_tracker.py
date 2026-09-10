@@ -1,3 +1,4 @@
+import argparse
 import requests
 from bs4 import BeautifulSoup
 import smtplib
@@ -150,7 +151,25 @@ def track_price():
             print(f"Price (₹{price:,.2f}) is not below the threshold (₹{PRICE_THRESHOLD:,.2f}). No alert sent.")
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Scrape a product price and email an alert if it drops below the threshold."
+    )
+    parser.add_argument(
+        "--once",
+        action="store_true",
+        help="Check the price a single time and exit, instead of looping every 24 hours.",
+    )
+    parser.add_argument(
+        "--interval",
+        type=float,
+        default=24 * 60 * 60,
+        help="Seconds to wait between checks when looping (default: 86400).",
+    )
+    args = parser.parse_args()
+
     while True:
         track_price()
-        print("\nNext check in 24 hours...")
-        time.sleep(24 * 60 * 60)
+        if args.once:
+            break
+        print(f"\nNext check in {args.interval / 3600:.1f} hours...")
+        time.sleep(args.interval)

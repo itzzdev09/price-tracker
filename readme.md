@@ -73,7 +73,13 @@ Once the setup is complete, you can run the script from your terminal:
 
 python price_tracker.py
 
-The script will run once, check the price, and then wait for 24 hours before the next check.
+By default the script checks the price and then repeats every 24 hours.
+
+    --once            check the price a single time and exit (useful with cron or CI)
+    --interval SECS   seconds to wait between checks when looping (default: 86400)
+
+For example, `python price_tracker.py --once` for a one-shot check, or
+`python price_tracker.py --interval 3600` to check hourly.
 Scheduling Script Execution
 
 For the script to run automatically at regular intervals, you should use a scheduling tool.
