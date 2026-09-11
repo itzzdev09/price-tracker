@@ -12,6 +12,9 @@ from dotenv import load_dotenv
 
 dotenv_loaded = load_dotenv()
 
+# Digits with optional thousands separators and an optional decimal part.
+PRICE_PATTERN = r'[\d,]+(?:\.\d+)?'
+
 try:
     with open('config.json') as config_file:
         config = json.load(config_file)
@@ -23,19 +26,50 @@ except json.JSONDecodeError:
     exit()
 
 
+def resolve_threshold(raw):
+    """Return the configured price threshold, or None if it is unusable.
+
+    The default used to be float('inf'), which makes `price < PRICE_THRESHOLD`
+    true for every price: a config without price_threshold sent an alert on
+    every single run, reading "below the threshold (Rs.inf)".
+    """
+    if raw is None:
+        return None
+    try:
+        threshold = float(raw)
+    except (TypeError, ValueError):
+        return None
+    if threshold != threshold or threshold in (float('inf'), float('-inf')):
+        return None
+    return threshold
+
+
+def parse_price(price_str):
+    """Pull a float out of a scraped price string, or None if there isn't one."""
+    if not price_str:
+        return None
+    match = re.search(PRICE_PATTERN, price_str)
+    if not match:
+        return None
+    try:
+        return float(match.group(0).replace(',', ''))
+    except ValueError:
+        return None
+
+
 PRODUCT_URL = config.get('product_url', '')
-PRICE_THRESHOLD = config.get('price_threshold', float('inf'))
+PRICE_THRESHOLD = resolve_threshold(config.get('price_threshold'))
 SMTP_SERVER = config.get('smtp_server', 'smtp.gmail.com')
 SMTP_PORT = config.get('smtp_port', 587)
 EMAIL_SENDER = config.get('email_sender', '')
 EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD') 
 EMAIL_RECEIVER = config.get('email_receiver', '')
 
-if not all([PRODUCT_URL, EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_RECEIVER]):
+if not all([PRODUCT_URL, EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_RECEIVER]) or PRICE_THRESHOLD is None:
     print("\nError: Configuration is incomplete.")
     print("Please check that:")
     print("1. Your .env file is in the same folder as the script and contains your EMAIL_PASSWORD.")
-    print("2. Your config.json file is filled out completely.")
+    print("2. Your config.json file is filled out completely, including a numeric price_threshold.")
     exit()
 
 def get_product_info(url):
@@ -78,12 +112,9 @@ def get_product_info(url):
             return None, None
 
         title = title_element.get_text().strip()
-        price_match = re.search(r'[\d,]+(?:\.\d+)?', price_str)
-        
-        if price_match:
-            cleaned_price_str = price_match.group(0).replace(',', '')
-            price = float(cleaned_price_str)
-        else:
+        price = parse_price(price_str)
+
+        if price is None:
             print(f"Warning: Could not parse a valid price from the string: '{price_str}'")
             return title, None
 
